@@ -1,0 +1,68 @@
+---
+title: "My Report"
+date: today
+author: H24095031
+format:
+ pdf:
+    include-in-header:
+      - text: |
+         \usepackage{setspace,relsize}
+mainfont: "Microsoft JhengHei UI"
+toc: true
+---
+
+```{r}
+
+# Load necessary libraries
+library(caret)
+library(dplyr)
+library(readxl)
+
+# Read the dataset
+file_path <- "cleaned_dataset.xlsx"
+data <- read_excel(file_path)
+
+# Create a binary variable to reflect support for Candidate 3
+data <- data %>%
+  mutate(supports_candidate_3 = ifelse(grepl("3號", v4_1) | grepl("3號", v4_2) | grepl("3號", v4_3), 1, 0))
+
+# Select relevant columns for the model (adjust column names as needed)
+data <- data %>%
+  select(v1, v6, v7, v8, supports_candidate_3)  # Replace with actual column names
+
+# Convert categorical variables to factors
+data$v1 <- as.factor(data$v1)  # Region
+data$v6 <- as.factor(data$v6)  # Age group
+data$v7 <- as.factor(data$v7)  # Education level
+data$v8 <- as.factor(data$v8)  # Gender
+
+# Ensure there are no missing values
+data <- na.omit(data)
+
+# Set up cross-validation method (e.g., 10-fold cross-validation)
+train_control <- trainControl(method = "cv", number = 10)
+
+# Train the logistic regression model using cross-validation
+model_cv <- train(supports_candidate_3 ~ ., data = data, method = "glm", family = binomial, trControl = train_control)
+
+# Output the results of cross-validation
+print(model_cv)
+
+# Evaluate model performance
+predictions <- predict(model_cv, newdata = data)
+
+# Confusion matrix to evaluate the accuracy of the predictions
+# confusionMatrix(predictions, as.factor(data$supports_candidate_3))
+
+# Summary of the Approach:
+# Random Forest Algorithm: The train() function uses method = "rf" to specify Random Forest as the algorithm.
+# Cross-Validation: The model is evaluated using 10-fold cross-validation to provide a reliable performance estimate.
+# Prediction and Evaluation: Predictions are made on the dataset, and the performance is evaluated with a confusion matrix 
+# to check the model’s accuracy in predicting support for Candidate 3.
+
+# Benefits:
+# Non-linear Relationships: Random Forests can model complex interactions between features.
+# Robust to Overfitting: Cross-validation helps to ensure that the model generalizes well.
+
+
+```
